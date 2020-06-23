@@ -149,3 +149,15 @@ mongoose.connect(process.env.MONGODB_URI, {
 mongoose.connection.once("open", () => {
   console.log("MongoDB connect success");
 });
+
+// Add users
+(addUsers = () => {
+  for (let i = 0; i < 5; i++) {
+    User.deleteOne({ username: `admin${i}` });
+    let newUser = new User({ username: `admin${i}`, password: "1111" });
+    newUser.save();
+  }
+  User.find().then((users) => {
+    console.log(users);
+  });
+})();
