@@ -10,6 +10,37 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Connect to database
+const connectionOptions = {
+  uri: process.env.MONGODB_URI,
+  options: {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useCreateIndex: true,
+  },
+};
+
+const DatabaseManager = require("./helpers/DatabaseManager");
+const db = new DatabaseManager();
+db.setConnectionOptions(connectionOptions);
+console.log(db);
+
+mongoose.connection.on("open", () => {
+  console.log("open connection");
+});
+mongoose.connection.on("close", () => {
+  console.log("close connection");
+});
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useCreateIndex: true,
+  })
+  .then((error, result) => {
+    console.log("open connect");
+  });
+
 checkToken = (token, secret) => {
   let status = null;
   jwt.verify(token, secret, (error, userId) => {
@@ -140,12 +171,5 @@ app.listen(process.env.PORT, () => {
   console.log(`Server is running on port: ${process.env.PORT}`);
 });
 
-// Connect to database
-mongoose.connect(process.env.MONGODB_URI, {
-  useUnifiedTopology: true,
-  useNewUrlParser: true,
-  useCreateIndex: true,
-});
-mongoose.connection.once("open", () => {
-  console.log("MongoDB connect success");
-});
+const addTestUsersToDatabase = require("./helpers/addTestUsersToDatabase");
+addTestUsersToDatabase(connectionOptions);
