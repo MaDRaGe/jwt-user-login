@@ -22,8 +22,6 @@ const connectionOptions = {
 
 const DatabaseManager = require("./helpers/DatabaseManager");
 const db = new DatabaseManager();
-db.setConnectionOptions(connectionOptions);
-console.log(db);
 
 mongoose.connection.on("open", () => {
   console.log("open connection");
@@ -31,15 +29,11 @@ mongoose.connection.on("open", () => {
 mongoose.connection.on("close", () => {
   console.log("close connection");
 });
-mongoose
-  .connect(process.env.MONGODB_URI, {
-    useUnifiedTopology: true,
-    useNewUrlParser: true,
-    useCreateIndex: true,
-  })
-  .then((error, result) => {
-    console.log("open connect");
-  });
+mongoose.connect(process.env.MONGODB_URI, {
+  useUnifiedTopology: true,
+  useNewUrlParser: true,
+  useCreateIndex: true,
+});
 
 checkToken = (token, secret) => {
   let status = null;
@@ -137,11 +131,11 @@ app.get("/users", (request, response) => {
 
 // Verify access token
 app.get("/verify", (request, response) => {
-  const status = checkToken(
+  const accessTokenVerifyStatus = checkToken(
     request.headers["authorization"].split(" ")[1],
     process.env.ACCESS_TOKEN_SECRET
   );
-  response.json({ accessTokenVerifyStatus: status });
+  response.json({ accessTokenVerifyStatus: accessTokenVerifyStatus });
 });
 
 // Refresh tokens
