@@ -40,25 +40,18 @@ class Login extends React.Component {
     };
 
     const { cookies } = this.props;
-    const accessToken = cookies.get("JWT_ACCESS_TOKEN");
-    axios
-      .post(
-        "http://localhost:5000/login",
-        { userInfo },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      )
-      .then((response) => {
-        if (response.data === "error") {
-          return;
-        }
-        this.setState({
-          username: "",
-          password: "",
-        });
-        cookies.set("JWT_ACCESS_TOKEN", response.data.accessToken);
-        cookies.set("JWT_REFRESH_TOKEN", response.data.refreshToken);
-        window.location = "/users";
+    axios.post("http://localhost:5000/login", { userInfo }).then((response) => {
+      if (response.data === "error") {
+        return;
+      }
+      this.setState({
+        username: "",
+        password: "",
       });
+      cookies.set("JWT_ACCESS_TOKEN", response.data.accessToken);
+      cookies.set("JWT_REFRESH_TOKEN", response.data.refreshToken);
+      window.location = "/users";
+    });
   };
 
   refreshTokens = () => {
@@ -74,40 +67,39 @@ class Login extends React.Component {
           cookies.set("JWT_REFRESH_TOKEN", response.data.tokens.refreshToken);
           window.location = "/users";
         }
-        if (response.data.refreshTokenVerifyStatus === "error") {
-          //window.location = "/";
-        }
       })
       .catch((error) => {
         console.log(error);
       });
   };
 
-  verifyAccessToken = () => {
+  async getAccessTokenVerifyStatus() {
     const { cookies } = this.props;
     const accessToken = cookies.get("JWT_ACCESS_TOKEN");
     if (accessToken) {
-      axios
-        .get("http://localhost:5000/verify", {
+      try {
+        const response = await axios.get("http://localhost:5000/verify", {
           headers: { Authorization: `Bearer ${accessToken}` },
-        })
-        .then((response) => {
-          console.log(response);
-          if (response.data.accessTokenVerifyStatus === "valid") {
-            window.location = "/users";
-          }
-          if (response.data.accessTokenVerifyStatus === "error") {
-            this.refreshTokens();
-          }
-        })
-        .catch((error) => {
-          console.log(error);
         });
+        return response.data.accessTokenVerifyStatus;
+      } catch (error) {
+        return "error";
+      }
+    } else {
+      return "error";
     }
-  };
+  }
 
   componentWillMount() {
-    this.verifyAccessToken();
+    const accessTokenVerifyStatus = this.getAccessTokenVerifyStatus();
+    accessTokenVerifyStatus.then((status) => {
+      if (status === "valid") {
+        window.location = "/users";
+      }
+      if (status === "error") {
+        this.refreshTokens();
+      }
+    });
   }
 
   render() {
