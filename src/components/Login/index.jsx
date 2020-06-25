@@ -40,7 +40,7 @@ class Login extends React.Component {
     };
 
     const { cookies } = this.props;
-    axios.post("http://localhost:5000/login", { userInfo }).then((response) => {
+    axios.post("http://localhost:5000/auth", { userInfo }).then((response) => {
       if (response.data === "error") {
         return;
       }
