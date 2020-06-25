@@ -1,14 +1,13 @@
-const mongoose = require ('mongoose')
-const config = require('./config')
-const app = require('./app')
+const mongoose = require("mongoose");
+const config = require("./config");
+const app = require("./app");
 
-mongoose.connect(
-  config.mongo.uri,
-  {
-    useCreateIndex: true,
-    useUnifiedTopology: true,
-    useNewUrlParser: true,
-  },
-)
+mongoose.connect(config.mongo.uri, {
+  useCreateIndex: true,
+  useUnifiedTopology: true,
+  useNewUrlParser: true,
+});
 
-module.exports = app.listen(config.port)
+module.exports = app.listen(config.port, () => {
+  console.log(`server listen on port ${config.port}`);
+});

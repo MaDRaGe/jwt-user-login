@@ -13,7 +13,7 @@ function App() {
         <Router>
           <Navbar />
           <Switch>
-            <Route path="/users">
+            <Route path="/user/list">
               <Userlist />
             </Route>
             <Route path="/">

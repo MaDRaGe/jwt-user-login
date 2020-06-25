@@ -7,17 +7,17 @@ class Login extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      username: "",
+      email: "",
       password: "",
     };
-    this.inputUsernameChange = this.inputUsernameChange.bind(this);
+    this.inputEmailChange = this.inputEmailChange.bind(this);
     this.inputPasswordChange = this.inputPasswordChange.bind(this);
     this.submitLogin = this.submitLogin.bind(this);
   }
 
-  inputUsernameChange = (event) => {
+  inputEmailChange = (event) => {
     this.setState({
-      username: event.target.value,
+      email: event.target.value,
     });
   };
 
@@ -30,77 +30,31 @@ class Login extends React.Component {
   submitLogin = (event) => {
     event.preventDefault();
 
-    if (this.state.username === "" || this.state.password === "") {
+    if (this.state.email === "" || this.state.password === "") {
       return;
     }
 
     const userInfo = {
-      username: this.state.username,
+      email: this.state.email,
       password: this.state.password,
     };
 
     const { cookies } = this.props;
-    axios.post("http://localhost:5000/auth", { userInfo }).then((response) => {
-      if (response.data === "error") {
-        return;
-      }
-      this.setState({
-        username: "",
-        password: "",
-      });
-      cookies.set("JWT_ACCESS_TOKEN", response.data.accessToken);
-      cookies.set("JWT_REFRESH_TOKEN", response.data.refreshToken);
-      window.location = "/users";
-    });
-  };
-
-  refreshTokens = () => {
-    const { cookies } = this.props;
-    const refreshToken = cookies.get("JWT_REFRESH_TOKEN");
     axios
-      .get("http://localhost:5000/refresh", {
-        headers: { Authorization: `Bearer ${refreshToken}` },
-      })
+      .post("http://localhost:5000/auth/signin", { userInfo })
       .then((response) => {
-        if (response.data.refreshTokenVerifyStatus === "valid") {
-          cookies.set("JWT_ACCESS_TOKEN", response.data.tokens.accessToken);
-          cookies.set("JWT_REFRESH_TOKEN", response.data.tokens.refreshToken);
-          window.location = "/users";
-        }
+        this.setState({
+          email: "",
+          password: "",
+        });
+        cookies.set("token", response.data.token);
+        cookies.set("refresh", response.data.refresh);
+        window.location = "/user/list";
       })
       .catch((error) => {
-        console.log(error);
+        console.error(error);
       });
   };
-
-  async getAccessTokenVerifyStatus() {
-    const { cookies } = this.props;
-    const accessToken = cookies.get("JWT_ACCESS_TOKEN");
-    if (accessToken) {
-      try {
-        const response = await axios.get("http://localhost:5000/verify", {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        return response.data.accessTokenVerifyStatus;
-      } catch (error) {
-        return "error";
-      }
-    } else {
-      return "error";
-    }
-  }
-
-  componentWillMount() {
-    const accessTokenVerifyStatus = this.getAccessTokenVerifyStatus();
-    accessTokenVerifyStatus.then((status) => {
-      if (status === "valid") {
-        window.location = "/users";
-      }
-      if (status === "error") {
-        this.refreshTokens();
-      }
-    });
-  }
 
   render() {
     return (
@@ -111,17 +65,17 @@ class Login extends React.Component {
             <div className="col-sm-12 col-md-4 input-group mb-3">
               <div className="input-group-prepend">
                 <span className="input-group-text" id="basic-addon1">
-                  Username
+                  Email
                 </span>
               </div>
               <input
                 type="text"
                 className="form-control"
-                placeholder="Username"
-                aria-label="Username"
+                placeholder="Email"
+                aria-label="Email"
                 aria-describedby="basic-addon1"
-                value={this.state.username}
-                onChange={this.inputUsernameChange}
+                value={this.state.email}
+                onChange={this.inputEmailChange}
               />
             </div>
             <div className="col-sm-12 col-md-4 input-group mb-3">

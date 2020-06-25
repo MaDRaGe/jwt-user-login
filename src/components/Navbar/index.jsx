@@ -6,7 +6,7 @@ export default (props) => {
     <nav className="navbar navbar-expand-lg navbar-light bg-light mb-3 row">
       <ul className="navbar-nav d-flex">
         <li className="nav-item">
-          <Link to="/login">
+          <Link to="/">
             <span className="nav-link">Login</span>
           </Link>
         </li>

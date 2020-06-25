@@ -10,63 +10,39 @@ class Userlist extends React.Component {
     };
   }
 
-  refreshTokens = () => {
+  loadUserListFromServer = async () => {
     const { cookies } = this.props;
-    const refreshToken = cookies.get("JWT_REFRESH_TOKEN");
-    axios
-      .get("http://localhost:5000/refresh", {
-        headers: { Authorization: `Bearer ${refreshToken}` },
-      })
-      .then((response) => {
-        console.log(response);
-        if (response.data.refreshTokenVerifyStatus === "valid") {
-          cookies.set("JWT_ACCESS_TOKEN", response.data.tokens.accessToken);
-          cookies.set("JWT_REFRESH_TOKEN", response.data.tokens.refreshToken);
-          const accessToken = cookies.get("JWT_ACCESS_TOKEN");
+    const accessToken = cookies.get("token");
+    try {
+      const userlistPromise = await axios.get(
+        "http://localhost:5000/user/list",
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      userlistPromise.then((response) => {
+        this.setState({ users: response.data });
+      });
+    } catch (error) {
+      const refreshToken = cookies.get("refresh");
+      axios
+        .post("http://localhost:5000/auth/refresh", { refresh: refreshToken })
+        .then((response) => {
+          cookies.set("token", response.data.token);
+          cookies.set("refresh", response.data.refresh);
           axios
-            .get("http://localhost:5000/users", {
-              headers: { Authorization: `Bearer ${accessToken}` },
+            .get("http://localhost:5000/user/list", {
+              headers: { Authorization: `Bearer ${response.data.token}` },
             })
             .then((response) => {
-              console.log(response);
-              this.setState({
-                users: response.data.users,
-              });
-            })
-            .catch((error) => {
-              console.error(error);
+              this.setState({ users: response.data });
             });
-        }
-        if (response.data.refreshTokenVerifyStatus === "error") {
-          window.location = "/";
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  };
-
-  getUserListFromServer = () => {
-    const { cookies } = this.props;
-    const accessToken = cookies.get("JWT_ACCESS_TOKEN");
-    axios
-      .get("http://localhost:5000/users", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
-      .then((response) => {
-        console.log(response);
-        if (response.data.accessTokenVerifyStatus === "error") {
-          this.refreshTokens();
-        } else {
-          this.setState({
-            users: response.data.users,
-          });
-        }
-      });
+        });
+    }
   };
 
   componentDidMount() {
-    this.getUserListFromServer();
+    this.loadUserListFromServer();
   }
 
   render() {
@@ -77,7 +53,7 @@ class Userlist extends React.Component {
             key={index}
             className="badge badge-secondary col-sm-12 col-md-3 mb-2"
           >
-            {user.username}
+            {user.email}
           </li>
         );
       })
